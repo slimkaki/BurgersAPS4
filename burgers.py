@@ -7,7 +7,6 @@ class Mcdonalds(object):
         self.dx = dx
         self.dy = dy
         self.dimensions = dimensions
-
         self.alpha = alpha
         self.dt = dt
         self.K = K
@@ -18,8 +17,9 @@ class Mcdonalds(object):
     def create_concentration_matrix(self):
         nx = ceil(self.dimensions[0]/self.dx)
         ny = ceil(self.dimensions[1]/self.dy)
-        matrix = np.zeros([nx, ny])
+        matrix = np.zeros([ny, nx])
         return matrix
+
 
     def DiferencaCentralX(self, Cmenos1, Cmais1, atual):
         return (Cmais1 + Cmenos1 - 2*atual) / self.dx2
@@ -41,16 +41,19 @@ class Mcdonalds(object):
 
     def passo(self, matrix):
         copy = np.copy(matrix)
+        v = 0
         for i in range(1, matrix.shape[0]-1):
             for j in range(1,matrix.shape[1]-1):
+                """
+                i eh linha (y)
+                j eh coluna (x)
+                """
                 v = self.CalcV(i)
-                # v = 0
-                u = self.alpha
                 atual = matrix[i][j]
-                d2Cx = self.DiferencaCentralX(matrix[i - 1][j], matrix[i + 1][j], atual)
-                d2Cy = self.DiferencaCentralY(matrix[i][j + 1], matrix[i][j - 1], atual)
-                dCx = self.DiferencaAdiantadaX(matrix[i + 1][j], matrix[i - 1][j])
-                dCy = self.DiferencaAdiantadaY(matrix[i][j - 1], matrix[i][j + 1])
+                d2Cx = self.DiferencaCentralX(matrix[i][j - 1], matrix[i][j + 1], atual)
+                d2Cy = self.DiferencaCentralY(matrix[i + 1][j], matrix[i - 1][j], atual)
+                dCx = self.DiferencaAdiantadaX(matrix[i][j + 1], matrix[i][j - 1])
+                dCy = self.DiferencaAdiantadaY(matrix[i - 1][j], matrix[i + 1][j])
                 nova_c = self.newC(d2Cx, d2Cy, dCx, dCy, atual, v)
                 if nova_c < 0:
                     nova_c = 0
@@ -68,12 +71,13 @@ class Mcdonalds(object):
         return copy
 
     def solve(self, matrix, tMax, a, b, Tdespejo, qc):
-        list_t = np.arange(0, tMax + 0 * self.dt, self.dt)
+        list_t = np.arange(0, tMax, self.dt)
+        plt.title(f"Dispersão do poluente no espaço 2D em {list_t[-1]+self.dt}s")
         for t in list_t:
+            if t <= Tdespejo:
+                matrix[b][a] += qc * self.dt
             matrix = self.passo(matrix)
-            if t < Tdespejo:
-                matrix[a][b] += qc * self.dt
-            # self.plotColorMap(matrix, k)
+            self.parserText(matrix)
         return matrix
 
     def parserText(self, matriz):
@@ -84,13 +88,14 @@ class Mcdonalds(object):
                 stringF += str(round(matriz[i][j], 5)) + "    "
             stringF += "]\n"
         with open("saida.txt", "w") as txt:
+            txt.write("")
+        with open("saida.txt", "a") as txt:
             txt.write(str(stringF))
-
+            txt.write("\n")
 
     def plotColorMap(self, matrix):
         color_map = plt.imshow(matrix)
         color_map.set_cmap("viridis")
-        plt.title("Dispersão do poluente no espaço 2D")
         plt.colorbar()
         plt.gca().invert_yaxis()
         plt.plot(a, b, "ro")
@@ -98,55 +103,51 @@ class Mcdonalds(object):
         plt.savefig("grafico_colormap1.png")
         plt.show()
     
-
-# grupo 11
-dx = 0.5
-dy = 0.5
-dimensions = [30, 20]
-dt = 0.05 #s
-alpha = 1
-k  = 1 # m^2/s
-Q_ponto = 100 # kg/ms
-qc = Q_ponto / (dx * dy)
-Tderramamento = 3 #s
-
-tMax = 10*Tderramamento # s
-
-n = 11
-a = int(n / 1.4 / dx) 
-b = int(60 / (n + 5) / dy) 
-
 def checkConvergencia(K, dt, dx):
     if((dt/(dx**2)) < (1/(4*K))):
         print("Converge, bola que segue")
     else:
         print("Nao converge, azedo")
 
-# # grupo 5
-# dx = 0.5
-# dy = 0.5
-# dimensions = [30, 30]
-# dt = 0.05 #s
-# alpha = 1
-# k  = 1 # m^2/s
-# Q_ponto = 80 # kg/ms
-# qc = Q_ponto / (dx * dy)
-# Tderramamento = 2 #s
-# u = 1
-# v = 0
-# tMax = 5 # s
-# a = int(15 / dx)
-# b = int(15 / dy)
+grupo = 11
+
+if grupo == 11:
+    # grupo 11
+    dx = 0.5
+    dy = 0.5
+    dimensions = [30, 20]
+    dt = 0.05 #s
+    alpha = 1
+    k  = 1 # m^2/s
+    Q_ponto = 100 # kg/ms
+    qc = Q_ponto / (dx * dy)
+    Tderramamento = 3 #s
+    tMax = 10 * Tderramamento # s
+    a = int((grupo / 1.4) / dx)
+    b = int((60 / (grupo + 5)) / dy)
+
+elif grupo == 5:
+    # grupo 5
+    dx = 0.5
+    dy = 0.5
+    dimensions = [30, 30]
+    dt = 0.05 #s
+    alpha = 1
+    k  = 1 # m^2/s
+    Q_ponto = 80 # kg/ms
+    qc = Q_ponto / (dx * dy)
+    Tderramamento = 2 #s
+    tMax = 5 # s
+    a = int(15 / dx)
+    b = int(15 / dy)
 
 checkConvergencia(k, dt, dx)
 
+bigmac = Mcdonalds(dx, dy, dimensions, alpha, dt, k)
 
-xtudo = Mcdonalds(dx, dy, dimensions, alpha, dt, k)
+matrix = bigmac.create_concentration_matrix()
 
-matrix = xtudo.create_concentration_matrix()
+solved = bigmac.solve(matrix, tMax, a, b, Tderramamento, qc)
 
-solved = xtudo.solve(matrix, tMax, a, b, Tderramamento, qc)
-# print(round(solved[40][40], 3))
-
-xtudo.parserText(solved)
-xtudo.plotColorMap(solved)
+bigmac.parserText(solved)
+bigmac.plotColorMap(solved)

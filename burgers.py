@@ -72,12 +72,11 @@ class Mcdonalds(object):
 
     def solve(self, matrix, tMax, a, b, Tdespejo, qc):
         list_t = np.arange(0, tMax, self.dt)
-        plt.title(f"Dispersão do poluente no espaço 2D em {list_t[-1]+self.dt}s")
+        plt.title(f"Dispersão do poluente no espaço 2D para t={tMax}s")
         for t in list_t:
             if t <= Tdespejo:
                 matrix[b][a] += qc * self.dt
             matrix = self.passo(matrix)
-            self.parserText(matrix)
         return matrix
 
     def parserText(self, matriz):
@@ -122,18 +121,17 @@ if grupo == 11:
     Q_ponto = 100 # kg/ms
     qc = Q_ponto / (dx * dy)
     Tderramamento = 3 #s
-    tMax = 10 * Tderramamento # s
+    tMax = 2 * Tderramamento # s
     a = int((grupo / 1.4) / dx)
     b = int((60 / (grupo + 5)) / dy)
-
 elif grupo == 5:
     # grupo 5
-    dx = 0.5
-    dy = 0.5
+    dx = 1
+    dy = 1
     dimensions = [30, 30]
-    dt = 0.05 #s
+    dt = 0.01 #s
     alpha = 1
-    k  = 1 # m^2/s
+    k = 10 # m^2/s
     Q_ponto = 80 # kg/ms
     qc = Q_ponto / (dx * dy)
     Tderramamento = 2 #s
